@@ -4,34 +4,31 @@ from __future__ import division
 
 import urllib2
 import csv
-import time, datetime
+import datetime
  
+BackTesting = True
+
 NDays = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 
 Months = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
 
-Nifty100 = []
-with open('ind_nifty100list.csv', 'rb') as f:
-    reader = csv.reader(f)
-    Nifty100.extend(list(reader))
-
-Nifty50 = []
-with open('ind_nifty50list.csv', 'rb') as f:
-    reader = csv.reader(f)
-    Nifty50.extend(list(reader))
+Interval = 120
+OneYearData = {}
+SixtyDaysData = {}
 
 total_count = 0
 sl_count = 0
 tgt_count = 0
 sq_count = 0
 
-ProfitPct = 0.005
-SLPct = 0.01
-SQOFFPct=0
+ProfitPct = 0.5/100
+SLPct = 1/100
 
 CAPITAL=100000
 GROSS=CAPITAL
+CAPITAL_PER_SHARE=0
 Rsyms = []
+
 def IntradayStrategy1(sym, d60, y1):
     global Rsyms
     c = d60[0][0]
@@ -46,8 +43,8 @@ def BackTest(sym, d60, y1):
     global sl_count
     global tgt_count
     global sq_count
-    global sym_maps
     global GROSS
+    global CAPITAL_PER_SHARE
 
     total_count+=1
     lw = 0
@@ -61,33 +58,24 @@ def BackTest(sym, d60, y1):
     l1 = 0
     h1 = 0
     for l in d60[1:]:
-        l1 = l[2]
-        h1 = l[1]
-        if float(l1) <= sl_price:
-            print("%s => SL Hit [Purchase Price=%s, Low=%s, SL=%s]" % (sym, pprice, l1, sl_price))
+        l1 = float(l[2])
+        h1 = float(l[1])
+	if l1 == 0 or h1 == 0:
+            break
+        if l1 <= sl_price:
+            print("%s => SL Hit [Purchase Price=%f, Low=%f, SL=%f]" % (sym, pprice, l1, sl_price))
             sl_count+=1
-            GROSS -= (GROSS*ProfitPct)
+            GROSS -= (CAPITAL_PER_SHARE*ProfitPct)
             return
-        if float(h1) >= tgt_price:
-            print("%s => TGT Hit [Purchase Price=%s, High=%s, TGT=%s]" % (sym, pprice, h1, tgt_price))
+        if h1 >= tgt_price:
+            print("%s => TGT Hit [Purchase Price=%f, High=%f, TGT=%f]" % (sym, pprice, h1, tgt_price))
             tgt_count+=1
-            GROSS += (GROSS*SLPct)
+            GROSS += (CAPITAL_PER_SHARE*SLPct)
             return
-    print("SquareOff for %s [Low=%s, High=%s, CutOffPrice=%s]" % (sym, l1, h1, (float(l1)+float(h1)/2)))
-    GROSS += (GROSS*((pprice-low)/pprice))
-    sq_count+=1
-
-def GetNifty100Data():
-    global sym_maps
-    response = requests.get('https://docs.google.com/spreadsheet/ccc?key=1RtKztdvSfTi1uhOzidZX9JGjyjOVf4PfrH6e-lEAJ_Y&output=csv')
-    assert response.status_code == 200, 'Wrong status code'
-    for l in response.content.splitlines()[1:]:
-        sym = l.split(',')[1]
-        sym_maps[sym] = l.split(',')        
-
-Interval = 120
-OneYearData = {}
-SixtyDaysData = {}
+    if l1 > 0 and h1 > 0:
+        print("%s => SquareOff [Low=%f, High=%f, CutOffPrice=%f]" % (sym, l1, h1, (l1+h1)/2))
+        GROSS += (CAPITAL_PER_SHARE*((((l1+h1)/2)-pprice)/pprice))
+        sq_count+=1
 
 def Get_1Y_Data(sym):
     data = {}
@@ -142,7 +130,43 @@ def GetPrevUTC(putc):
             i+=1
     return prev_utc
 
+def GetNifty50Symbols():
+    Nifty50 = []
+    syms = []
+    with open('ind_niftynext50list.csv', 'rb') as f:
+        reader = csv.reader(f)
+        Nifty50.extend(list(reader))
+    f.close()
+    for sym in Nifty50[1:]:
+        syms.append(sym[2])
+    return syms
+
+def GetNifty100Symbols():
+    Nifty100 = []
+    syms = []
+    with open('ind_nifty100list.csv', 'rb') as f:
+        reader = csv.reader(f)
+        Nifty100.extend(list(reader))
+    f.close()
+    for sym in Nifty100[1:]:
+        syms.append(sym[2])
+    return syms
+
+def GetNifty200Symbols():
+    Nifty200 = []
+    syms = []
+    with open('ind_nifty200list.csv', 'rb') as f:
+        reader = csv.reader(f)
+        Nifty200.extend(list(reader))
+    f.close()
+    for sym in Nifty200[1:]:
+        syms.append(sym[2])
+    return syms
+
 if __name__=="__main__":
+    symbols = GetNifty50Symbols()
+    #symbols = GetNifty100Symbols()
+    #symbols = GetNifty200Symbols()
     for sym in symbols:
         OneYearData[sym] = Get_1Y_Data(sym)
         SixtyDaysData[sym] = Get_60D_Data(sym)
@@ -172,20 +196,25 @@ if __name__=="__main__":
             pday = d-1
         dt = datetime.datetime(py, pm, pday, 15, 30, 0)
         prev_utc = GetPrevUTC(dt.strftime("%s"))
+        #print("Iteration for %s" % (datetime.datetime.fromtimestamp(int(utc)).strftime('%Y-%m-%d %H:%M:%S')))
         for sym in symbols:
             if utc in SixtyDaysData[sym].keys() and prev_utc in OneYearData[sym].keys():
                 IntradayStrategy1(sym, SixtyDaysData[sym][utc], OneYearData[sym][prev_utc])
-        total_count=0
-        sl_count=0
-        tgt_count=0
-        sq_count=0
-        for sym in Rsyms:
-            if utc in SixtyDaysData[sym].keys() and prev_utc in OneYearData[sym].keys():
-                BackTest(sym, SixtyDaysData[sym][utc], OneYearData[sym][prev_utc])
-        if total_count > 0:
-            print("%s %d: Total Count=%d" % (Months[m-1], d, total_count))
-            print("%s %d: STP Count=%d, Hit Ratio=%d" % (Months[m-1], d, sl_count, (sl_count/total_count*100)))
-            print("%s %d, TGT Count=%d, Hit Ratio=%d" % (Months[m-1], d, tgt_count, (tgt_count/total_count*100)))
-            print("%s %d, SQO Count=%d, Hit Ratio=%d" % (Months[m-1], d, sq_count, (sq_count/total_count*100)))
+            #else:
+                #print("Symbol %s is not shortlisted for %s(%s)" % (sym, utc, datetime.datetime.fromtimestamp(int(utc)).strftime('%Y-%m-%d %H:%M:%S')))
+        if BackTesting is True and len(Rsyms) > 0:
+            total_count=0
+            sl_count=0
+            tgt_count=0
+            sq_count=0
+	    CAPITAL_PER_SHARE=GROSS/len(Rsyms)
+            for sym in Rsyms:
+                if utc in SixtyDaysData[sym].keys() and prev_utc in OneYearData[sym].keys():
+                    BackTest(sym, SixtyDaysData[sym][utc], OneYearData[sym][prev_utc])
+            if total_count > 0:
+                print("%s %d: Total Count=%d" % (Months[m-1], d, total_count))
+                print("%s %d: STP Count=%d, Hit Ratio=%d" % (Months[m-1], d, sl_count, (sl_count/total_count*100)))
+                print("%s %d, TGT Count=%d, Hit Ratio=%d" % (Months[m-1], d, tgt_count, (tgt_count/total_count*100)))
+                print("%s %d, SQO Count=%d, Hit Ratio=%d" % (Months[m-1], d, sq_count, (sq_count/total_count*100)))
         d+=1
-    print("Initial Capital=%d, Gross amount=%d, Pct=%.2f" % (CAPITAL, GROSS, (GROSS-CAPITAL)/CAPITAL))
+    print("Initial Capital=%d, Gross amount=%d, Pct=%.2f%%" % (CAPITAL, GROSS, float((GROSS-CAPITAL)/CAPITAL)*100))
