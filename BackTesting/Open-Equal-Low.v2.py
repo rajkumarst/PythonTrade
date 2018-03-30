@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python -u
 
 from __future__ import division
 
@@ -12,7 +12,7 @@ NDays = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 
 Months = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
 
-Interval = 120
+Interval = 480
 OneYearData = {}
 SixtyDaysData = {}
 
@@ -21,8 +21,10 @@ sl_count = 0
 tgt_count = 0
 sq_count = 0
 
-ProfitPct = 0.5/100
-SLPct = 1/100
+ProfitPct = 0.8/100
+SLPct = 0.4/100
+#ProfitPct = 0.3/100
+#SLPct = 1/100
 
 CAPITAL=100000
 GROSS=CAPITAL
@@ -58,22 +60,26 @@ def BackTest(sym, d60, y1):
     l1 = 0
     h1 = 0
     for l in d60[1:]:
+        # c h l o format, retrive the low and high
         l1 = float(l[2])
         h1 = float(l[1])
-	if l1 == 0 or h1 == 0:
+        if l1 == 0 or h1 == 0:
             break
         if l1 <= sl_price:
             print("%s => SL Hit [Purchase Price=%f, Low=%f, SL=%f]" % (sym, pprice, l1, sl_price))
             sl_count+=1
-            GROSS -= (CAPITAL_PER_SHARE*ProfitPct)
+	    print("GROSS=%f, CPS=%f, G-LOSS=%f" % (GROSS, (CAPITAL_PER_SHARE*SLPct), GROSS-(CAPITAL_PER_SHARE*SLPct)))
+            GROSS -= (CAPITAL_PER_SHARE*SLPct)
             return
         if h1 >= tgt_price:
             print("%s => TGT Hit [Purchase Price=%f, High=%f, TGT=%f]" % (sym, pprice, h1, tgt_price))
             tgt_count+=1
-            GROSS += (CAPITAL_PER_SHARE*SLPct)
+	    print("GROSS=%f, CPS=%f, G+Earning=%f" % (GROSS, (CAPITAL_PER_SHARE*ProfitPct), GROSS+(CAPITAL_PER_SHARE*ProfitPct)))
+            GROSS += (CAPITAL_PER_SHARE*ProfitPct)
             return
     if l1 > 0 and h1 > 0:
         print("%s => SquareOff [Low=%f, High=%f, CutOffPrice=%f]" % (sym, l1, h1, (l1+h1)/2))
+	print("GROSS=%f, CPS=%f, G+Earning=%f" % (GROSS, (CAPITAL_PER_SHARE*((((l1+h1)/2)-pprice)/pprice)), GROSS + (CAPITAL_PER_SHARE*((((l1+h1)/2)-pprice)/pprice))))
         GROSS += (CAPITAL_PER_SHARE*((((l1+h1)/2)-pprice)/pprice))
         sq_count+=1
 
@@ -164,57 +170,66 @@ def GetNifty200Symbols():
     return syms
 
 if __name__=="__main__":
-    symbols = GetNifty50Symbols()
-    #symbols = GetNifty100Symbols()
-    #symbols = GetNifty200Symbols()
-    for sym in symbols:
-        OneYearData[sym] = Get_1Y_Data(sym)
-        SixtyDaysData[sym] = Get_60D_Data(sym)
-    y = 2018
-    m = 1
-    d = 1
-    while True:
-        if m > 3:
-            break
-        if (m == 2 and d > 27) or d > 30:
-            d=2
-            m+=1
-            continue
-        Rsyms = []
-        dt = datetime.datetime(y, m, d, 9, 16, 0)
-        utc = dt.strftime("%s")
-        pm = m
-        py = y
-        if d == 1:
-            if m == 1:
-                pday = NDays[11]
-                pm = 12
-                py -= 1
-            else:
-                pday = NDays[m-1]
-        else:
-            pday = d-1
-        dt = datetime.datetime(py, pm, pday, 15, 30, 0)
-        prev_utc = GetPrevUTC(dt.strftime("%s"))
-        #print("Iteration for %s" % (datetime.datetime.fromtimestamp(int(utc)).strftime('%Y-%m-%d %H:%M:%S')))
+    ndays = 0
+    Nsyms = []
+    #Nsyms.append(GetNifty50Symbols())
+    Nsyms.append(GetNifty100Symbols())
+    #Nsyms.append(GetNifty200Symbols())
+    for symbols in Nsyms:
         for sym in symbols:
-            if utc in SixtyDaysData[sym].keys() and prev_utc in OneYearData[sym].keys():
-                IntradayStrategy1(sym, SixtyDaysData[sym][utc], OneYearData[sym][prev_utc])
-            #else:
-                #print("Symbol %s is not shortlisted for %s(%s)" % (sym, utc, datetime.datetime.fromtimestamp(int(utc)).strftime('%Y-%m-%d %H:%M:%S')))
-        if BackTesting is True and len(Rsyms) > 0:
-            total_count=0
-            sl_count=0
-            tgt_count=0
-            sq_count=0
-	    CAPITAL_PER_SHARE=GROSS/len(Rsyms)
-            for sym in Rsyms:
+            OneYearData[sym] = Get_1Y_Data(sym)
+            SixtyDaysData[sym] = Get_60D_Data(sym)
+        y = 2018
+        m = 1
+        d = 1
+        while True:
+            if m > 3:
+                break
+            if (m == 2 and d > 27) or d > 30:
+                d=2
+                m+=1
+                continue
+            Rsyms = []
+            dt = datetime.datetime(y, m, d, 9, 16, 0)
+            utc = dt.strftime("%s")
+            pm = m
+            py = y
+            if d == 1:
+                if m == 1:
+                    pday = NDays[11]
+                    pm = 12
+                    py -= 1
+                else:
+                    pday = NDays[m-1]
+            else:
+                pday = d-1
+            dt = datetime.datetime(py, pm, pday, 15, 30, 0)
+            prev_utc = GetPrevUTC(dt.strftime("%s"))
+            #print("Iteration for %s" % (datetime.datetime.fromtimestamp(int(utc)).strftime('%Y-%m-%d %H:%M:%S')))
+            for sym in symbols:
                 if utc in SixtyDaysData[sym].keys() and prev_utc in OneYearData[sym].keys():
-                    BackTest(sym, SixtyDaysData[sym][utc], OneYearData[sym][prev_utc])
-            if total_count > 0:
-                print("%s %d: Total Count=%d" % (Months[m-1], d, total_count))
-                print("%s %d: STP Count=%d, Hit Ratio=%d" % (Months[m-1], d, sl_count, (sl_count/total_count*100)))
-                print("%s %d, TGT Count=%d, Hit Ratio=%d" % (Months[m-1], d, tgt_count, (tgt_count/total_count*100)))
-                print("%s %d, SQO Count=%d, Hit Ratio=%d" % (Months[m-1], d, sq_count, (sq_count/total_count*100)))
-        d+=1
-    print("Initial Capital=%d, Gross amount=%d, Pct=%.2f%%" % (CAPITAL, GROSS, float((GROSS-CAPITAL)/CAPITAL)*100))
+                    IntradayStrategy1(sym, SixtyDaysData[sym][utc], OneYearData[sym][prev_utc])
+                #else:
+                    #print("Symbol %s is not shortlisted for %s(%s)" % (sym, utc, datetime.datetime.fromtimestamp(int(utc)).strftime('%Y-%m-%d %H:%M:%S')))
+            if BackTesting is True and len(Rsyms) > 0:
+                ndays+=1
+                total_count=0
+                sl_count=0
+                tgt_count=0
+                sq_count=0
+		if GROSS == 0:
+                    CAPITAL_PER_SHARE=CAPITAL/len(Rsyms)
+                else:
+                    CAPITAL_PER_SHARE=GROSS/len(Rsyms)
+                for sym in Rsyms:
+                    if utc in SixtyDaysData[sym].keys() and prev_utc in OneYearData[sym].keys():
+                        BackTest(sym, SixtyDaysData[sym][utc], OneYearData[sym][prev_utc])
+                if total_count > 0:
+                    print("%s %d: Total Count=%d" % (Months[m-1], d, total_count))
+                    print("%s %d: STP Count=%d, Hit Ratio=%d" % (Months[m-1], d, sl_count, (sl_count/total_count*100)))
+                    print("%s %d, TGT Count=%d, Hit Ratio=%d" % (Months[m-1], d, tgt_count, (tgt_count/total_count*100)))
+                    print("%s %d, SQO Count=%d, Hit Ratio=%d" % (Months[m-1], d, sq_count, (sq_count/total_count*100)))
+            d+=1
+            #break
+        print("Nifty%d: Initial Capital=%d, Gross amount=%d, Pct=%.2f%%" % (len(symbols), CAPITAL, GROSS, float((GROSS-CAPITAL)/CAPITAL)*100))
+    print ndays
