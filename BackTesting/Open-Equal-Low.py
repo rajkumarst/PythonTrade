@@ -334,18 +334,20 @@ if __name__=="__main__":
 		m = int(dt.strftime("%m"))
 		d = int(dt.strftime("%d"))
 		one_day_scan=1
-	    elif sys.argv[i] == 'Both-Buy-And-Sell':
+	    elif sys.argv[i] == '--Both-Buy-And-Sell':
 		plot_returns+='_'+sys.argv[i]
 		plot_hits+='_'+sys.argv[i]
 		varience = "Both-Buy-And-Sell"
-	    elif sys.argv[i] == 'Go_with_Nifty':
+	    elif sys.argv[i] == '--Go_with_Nifty':
 		plot_returns+='_'+sys.argv[i]
 		plot_hits+='_'+sys.argv[i]
 		varience = "Go_with_Nifty"
-	    elif sys.argv[i] == 'Always-Buy':
+	    elif sys.argv[i] == '--Always-Buy':
 		plot_returns+='_'+sys.argv[i]
 		plot_hits+='_'+sys.argv[i]
 		varience = "Always-Buy"
+	    elif sys.argv[i] == '--no-back-testing':
+		BackTesting=False
 	    i+=1
 
     if len(Nsyms) == 0:
@@ -466,10 +468,14 @@ if __name__=="__main__":
 		    print("%s %d: TGT Count=%d, Hit Ratio=%d" % (Months[m-1], d, tgt_count, (tgt_count/total_count*100)))
 		    print("%s %d: SQO Count=%d, Hit Ratio=%d" % (Months[m-1], d, sq_count, (sq_count/total_count*100)))
 		    tdays+=1
+	    else:
+		print("Recommended Buy Stocks = %s" % ','.join(RsymsBuy))
+		print("Recommended Sell Stocks = %s" % ','.join(RsymsSell))
 	d+=1
 	if one_day_scan == 1:
 	    break
-    plot_returns_handle.close();
-    plot_hits_handle.close();
-    print("Nifty%d: Capital=%d, Gross=%d, Pct=%.2f%% (ProfitPct=%s,SLPct=%s)" % (len(Nsyms), CAPITAL, GROSS, float((GROSS-CAPITAL)/CAPITAL)*100, ProfitPct, SLPct))
-    print "Total number of trade days=%d" % tdays
+    if BackTesting is True:
+	plot_returns_handle.close();
+	plot_hits_handle.close();
+	print("Nifty%d: Capital=%d, Gross=%d, Pct=%.2f%% (ProfitPct=%s,SLPct=%s)" % (len(Nsyms), CAPITAL, GROSS, float((GROSS-CAPITAL)/CAPITAL)*100, ProfitPct, SLPct))
+	print "Total number of trade days=%d" % tdays
