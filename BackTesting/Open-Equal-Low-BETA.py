@@ -8,6 +8,23 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from copy import deepcopy
  
+verbose=0
+one_day_scan=0
+y = 2018
+m = 1
+d = 1
+CAPITAL=100000
+CPS=0
+GROSS=CAPITAL
+today=0
+variance = "Both-Buy-And-Sell"
+plot_returns='out.plot_earnings'
+plot_hits='out.plot_hits'
+RsymsSell = []
+RsymsSellDetail = []
+RsymsBuy = []
+RsymsBuyDetail = []
+
 BackTesting = True
 
 NDays = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
@@ -457,7 +474,6 @@ Interval = 960
 TodayData = {}
 OneYearData = {}
 SixtyDaysData = {}
-SMA_Check=False
 VOL_Check=8
 
 sl_count = 0
@@ -500,7 +516,7 @@ def CalculateSMA(sym, prev_utc):
     log("%s[5,10,20,30] = [%d, %d, %d, %d]" % (sym, sma5/5, sma10/10, sma20/20, sma30/30))
     return [sma5/5, sma10/10, sma20/20, sma30/30]
 
-VOLS_check_list = ['CandleVolume > 2% of YesterdaysVolume', 'CandleVolume > 1% of YesterdaysVolume', 'CandleVolume > YesterdayLastCandleVolume', 'CandleVolume > 1.5% of YesterdayLastCandleVolume', 'CandleVolume > AverageofYesterdatLast5CandleVolume', 'CandleVolume > 1.5% of AverageofYesterdatLast5CandleVolume', 'CandleVolume > 1.5% of YesterdaysVolume', 'CandleVolume > 3% of YesterdaysVolume', 'CandleVolume > 3.5% of YesterdaysVolume']
+VOLS_check_list = ['CandleVolume > 1% of YesterdaysVolume', 'CandleVolume > 1.2% of YesterdaysVolume', 'CandleVolume > 1.5% of YesterdaysVolume', 'CandleVolume > 2% of YesterdaysVolume', 'CandleVolume > 2.2% of YesterdaysVolume', 'CandleVolume > 2.5% of YesterdaysVolume', 'CandleVolume > 3% of YesterdaysVolume', 'CandleVolume > 3.2% of YesterdaysVolume', 'CandleVolume > 3.5% of YesterdaysVolume', 'CandleVolume > 4% of YesterdaysVolume']
 
 def VolCheck(c, sym, pUTC, prev_utc, c_candle_vol):
     # prev_utc will refer to previous day 3:30 UTC
@@ -508,38 +524,34 @@ def VolCheck(c, sym, pUTC, prev_utc, c_candle_vol):
     #print GetHumanDate(prev_utc), GetHumanDate(pUTC)
     pvol = int(OneYearData[sym][pUTC][4])
     p_candle_vol = int(SixtyDaysData[sym][prev_utc][-1][4])
-    if c == 0 and (c_candle_vol/pvol)*100 > 2:
-	log("%s: PreviousDayVolume=%d, CurrentCandleVolume=%d" % (sym, pvol, c_candle_vol))
-	return True
     if c == 1 and (c_candle_vol/pvol)*100 > 1:
 	log("%s: PreviousDayVolume=%d, CurrentCandleVolume=%d" % (sym, pvol, c_candle_vol))
 	return True
-    if c == 2 and c_candle_vol > p_candle_vol:
-	log("%s: PreviousDayLastCandleVolume=%d, CurrentCandleVolume=%d" % (sym, p_candle_vol, c_candle_vol))
+    if c == 2 and (c_candle_vol/pvol)*100 > 1.2:
+	log("%s: PreviousDayVolume=%d, CurrentCandleVolume=%d" % (sym, pvol, c_candle_vol))
 	return True
-    if c == 3 and (c_candle_vol/p_candle_vol)*100 > 1.5:
-	log("%s: PreviousDayLastCandleVolume=%d, CurrentCandleVolume=%d" % (sym, p_candle_vol, c_candle_vol))
+    if c == 3 and (c_candle_vol/pvol)*100 > 1.5:
+	log("%s: PreviousDayVolume=%d, CurrentCandleVolume=%d" % (sym, pvol, c_candle_vol))
 	return True
-    if c == 4 or c == 5:
-	i=1
-	vol5=0
-	while i < 5:
-	    vol5 += int(SixtyDaysData[sym][prev_utc][-i][4])
-	    i+=1
-	avg_vol5 = vol5/(i-1)
-	if c == 4 and c_candle_vol > avg_vol5:
-	    log("%s: PreviousDayLast5CandleVolumeAvg=%d, CurrentCandleVolume=%d" % (sym, avg_vol5, c_candle_vol))
-	    return True
-	if c == 5 and (c_candle_vol/avg_vol5)*100 > 1.5:
-	    log("%s: PreviousDayLast5CandleVolumeAvg=%d, CurrentCandleVolume=%d" % (sym, avg_vol5, c_candle_vol))
-	    return True
-    if c == 6 and (c_candle_vol/pvol)*100 > 1.5:
+    if c == 5 and (c_candle_vol/pvol)*100 > 2:
+	log("%s: PreviousDayVolume=%d, CurrentCandleVolume=%d" % (sym, pvol, c_candle_vol))
+	return True
+    if c == 4 and (c_candle_vol/pvol)*100 > 2.2:
+	log("%s: PreviousDayVolume=%d, CurrentCandleVolume=%d" % (sym, pvol, c_candle_vol))
+	return True
+    if c == 5 and (c_candle_vol/pvol)*100 > 2.5:
 	log("%s: PreviousDayVolume=%d, CurrentCandleVolume=%d" % (sym, pvol, c_candle_vol))
 	return True
     if c == 7 and (c_candle_vol/pvol)*100 > 3:
 	log("%s: PreviousDayVolume=%d, CurrentCandleVolume=%d" % (sym, pvol, c_candle_vol))
 	return True
+    if c == 6 and (c_candle_vol/pvol)*100 > 3.2:
+	log("%s: PreviousDayVolume=%d, CurrentCandleVolume=%d" % (sym, pvol, c_candle_vol))
+	return True
     if c == 8 and (c_candle_vol/pvol)*100 > 3.5:
+	log("%s: PreviousDayVolume=%d, CurrentCandleVolume=%d" % (sym, pvol, c_candle_vol))
+	return True
+    if c == 9 and (c_candle_vol/pvol)*100 > 4:
 	log("%s: PreviousDayVolume=%d, CurrentCandleVolume=%d" % (sym, pvol, c_candle_vol))
 	return True
     return False
@@ -548,8 +560,11 @@ def IntradayStrategy(strategy, sym, UTC, pUTC):
     global RsymsBuy
     global RsymsSell
 
-    cdata = SixtyDaysData[sym][UTC]
-    c = cdata[0][0]
+    if today:
+	cdata = TodayData[sym][UTC]
+    else:
+	cdata = SixtyDaysData[sym][UTC]
+    c = float(cdata[0][0])
     h = float(cdata[0][1])
     low = float(cdata[0][2])
     o = float(cdata[0][3])
@@ -562,26 +577,31 @@ def IntradayStrategy(strategy, sym, UTC, pUTC):
 	    log("Recommending Buy %s as o == l and pclose < o (%.2f, %.2f, %.2f, %.2f)" % (sym, o, low, float(OneYearData[sym][pUTC][0]), o))
 	    log("Buy[%s]:YesterdaysVolume=%s,CurCandleVol=%s(%.2f%%)" % (sym,OneYearData[sym][pUTC][4],cdata[0][4],(int(cdata[0][4])/int(OneYearData[sym][pUTC][4]))*100))
 	    RsymsBuy.append(sym)
+	    RsymsBuyDetail.append(["%s,Buy=%d,Tgt=%d,SL=%d" % (sym,c,c+(c*ProfitPct),c-(c*SLPct))])
 
     if strategy == 'Sell' or strategy == 'Both':
 	if o == h and float(OneYearData[sym][pUTC][0]) > o and VolCheck(VOL_Check, sym, pUTC, prev_utc, int(cdata[0][4])):
 	    log("Recommending Sell %s as o == h and pclose > o (%.2f, %.2f, %.2f, %.2f)" % (sym, o, h, float(OneYearData[sym][pUTC][0]), o))
 	    log("Sell[%s]:YesterdaysVolume=%s,CurCandleVol=%s(%.2f%%)" % (sym,OneYearData[sym][pUTC][4],cdata[0][4],(int(cdata[0][4])/int(OneYearData[sym][pUTC][4]))*100))
 	    RsymsSell.append(sym)
+	    RsymsSellDetail.append(["%s,Buy=%d,Tgt=%d,SL=%d" % (sym,c,c-(c*ProfitPct),c+(c*SLPct))])
 
-def BackTestBuy(sym, UTC):
+def BackTestBuy(sym, UTC, cps):
     global sl_count
     global tgt_count
     global sq_count
     global GROSS
-    global CPS
 
+    cps *= int(MIS[sym])
     no_sq_off=1
     pft_list = []
     sl_list = []
-    cdata = SixtyDaysData[sym][UTC]
+    if today:
+	cdata = TodayData[sym][UTC]
+    else:
+	cdata = SixtyDaysData[sym][UTC]
     lw = 0
-    c = cdata[0][0]
+    c = float(cdata[0][0])
     h = float(cdata[0][1])
     low = float(cdata[0][2])
     o = float(cdata[0][3])
@@ -601,13 +621,13 @@ def BackTestBuy(sym, UTC):
 	    break
 	if no_sq_off == 1 and l1 <= sl_price:
 	    sl_count+=1
-	    log("SL Hit: %s: %s => GROSS=%.2f, SLPct=%.2f%%, PurchasePrice=%.2f, SL=%.2f, ActualSLPct=%.2f%%, ActualLoss=%.2f, G-LOSS=%.2f" % (GetHumanDate(UTC), sym, GROSS, SLPct*100, pprice, sl_price, (l1-pprice)/pprice*100, CPS*((l1-pprice)/pprice), GROSS-((l1-pprice)/pprice)))
-	    GROSS -= (CPS*abs((l1-pprice)/pprice))
+	    log("SL Hit: %s: %s => GROSS=%.2f, SLPct=%.2f%%, PurchasePrice=%.2f, SL=%.2f, ActualSLPct=%.2f%%, ActualLoss=%.2f, G-LOSS=%.2f" % (GetHumanDate(UTC), sym, GROSS, SLPct*100, pprice, sl_price, (l1-pprice)/pprice*100, cps*((l1-pprice)/pprice), GROSS-((l1-pprice)/pprice)))
+	    GROSS -= (cps*abs((l1-pprice)/pprice))
 	    no_sq_off=2
 	if no_sq_off == 1 and h1 >= tgt_price:
 	    tgt_count+=1
-	    log("TGT Hit: %s: %s => GROSS=%.2f, ProfitPct=%.2f%%, PurchasePrice=%.2f, TGT=%.2f, G+Earning=%.2f" % (GetHumanDate(UTC), sym, GROSS, ProfitPct*100, pprice, tgt_price, GROSS+(CPS*ProfitPct)))
-	    GROSS += (CPS*ProfitPct)
+	    log("TGT Hit: %s: %s => GROSS=%.2f, ProfitPct=%.2f%%, PurchasePrice=%.2f, TGT=%.2f, G+Earning=%.2f" % (GetHumanDate(UTC), sym, GROSS, ProfitPct*100, pprice, tgt_price, GROSS+(cps*ProfitPct)))
+	    GROSS += (cps*ProfitPct)
 	    no_sq_off=3
 	if l1 < pprice:
 	    sl_list.append("%s(%.2f%%)" % (l1,(((pprice-l1)/pprice))*100));
@@ -618,21 +638,24 @@ def BackTestBuy(sym, UTC):
     elif no_sq_off==3:
 	log("%s: %s => PossibleTgtHits = %s" % (sym, GetHumanDate(UTC), ','.join(pft_list)))
     else:
-	log("SquareOff Hit: %s: %s => Purchase Price=%.2f, Low=%.2f, High=%.2f, Close=%.2f, CutOffPrice=%.2f], GROSS=%.2f, CPCT=%.2f, G+Earning=%.2f,PossibleTgtHits[%s],PossibleSLHits[%s]" % (GetHumanDate(UTC), sym, pprice, l1, h1, c1, (l1+c1)/2, GROSS, (((l1+c1)/2)-pprice)/pprice, GROSS + (CPS*((((l1+c1)/2)-pprice)/pprice)), ','.join(pft_list), ','.join(sl_list)))
+	log("SquareOff Hit: %s: %s => Purchase Price=%.2f, Low=%.2f, High=%.2f, Close=%.2f, CutOffPrice=%.2f], GROSS=%.2f, CPCT=%.2f, G+Earning=%.2f,PossibleTgtHits[%s],PossibleSLHits[%s]" % (GetHumanDate(UTC), sym, pprice, l1, h1, c1, l1, GROSS, (l1-pprice)/pprice, GROSS + (cps*((l1-pprice)/pprice)), ','.join(pft_list), ','.join(sl_list)))
 	sq_count+=1
-	GROSS += (CPS*((((l1+c1)/2)-pprice)/pprice))
+	GROSS += (cps*((l1-pprice)/pprice))
 
-def BackTestSell(sym, UTC):
+def BackTestSell(sym, UTC, cps):
     global sl_count
     global tgt_count
     global sq_count
     global GROSS
-    global CPS
 
+    cps *= int(MIS[sym])
     no_sq_off=1
     pft_list = []
     sl_list = []
-    cdata = SixtyDaysData[sym][UTC]
+    if today:
+	cdata = TodayData[sym][UTC]
+    else:
+	cdata = SixtyDaysData[sym][UTC]
     lw = 0
     c = float(cdata[0][0])
     h = float(cdata[0][1])
@@ -652,14 +675,14 @@ def BackTestSell(sym, UTC):
 	if l1 == 0 or h1 == 0:
 	    break
 	if no_sq_off==1 and h1 >= sl_price:
-	    log("SL Hit: %s: %s => GROSS=%.2f, SLPct=%.2f%%, PurchasePrice=%.2f, SL=%.2f, ActualSLPct=%.2f%%, ActualLoss=%.2f, G-LOSS=%.2f" % (GetHumanDate(UTC), sym, GROSS, SLPct*100, pprice, sl_price, (h1-pprice)/pprice*100, CPS*((h1-pprice)/pprice), GROSS-((h1-pprice)/pprice)))
+	    log("SL Hit: %s: %s => GROSS=%.2f, SLPct=%.2f%%, PurchasePrice=%.2f, SL=%.2f, ActualSLPct=%.2f%%, ActualLoss=%.2f, G-LOSS=%.2f" % (GetHumanDate(UTC), sym, GROSS, SLPct*100, pprice, sl_price, (h1-pprice)/pprice*100, cps*((h1-pprice)/pprice), GROSS-((h1-pprice)/pprice)))
 	    sl_count+=1
-	    GROSS -= (CPS*abs((h1-pprice)/pprice))
+	    GROSS -= (cps*abs((h1-pprice)/pprice))
 	    no_sq_off=2
 	if no_sq_off==1 and l1 <= tgt_price:
-	    log("SL Hit: %s: %s => GROSS=%.2f, SLPct=%.2f%%, PurchasePrice=%.2f, SL=%.2f, ActualSLPct=%.2f%%, ActualLoss=%.2f, G-LOSS=%.2f" % (GetHumanDate(UTC), sym, GROSS, SLPct*100, pprice, sl_price, (l1-pprice)/pprice*100, CPS*((l1-pprice)/pprice), GROSS-((l1-pprice)/pprice)))
+	    log("SL Hit: %s: %s => GROSS=%.2f, SLPct=%.2f%%, PurchasePrice=%.2f, SL=%.2f, ActualSLPct=%.2f%%, ActualLoss=%.2f, G-LOSS=%.2f" % (GetHumanDate(UTC), sym, GROSS, SLPct*100, pprice, sl_price, (l1-pprice)/pprice*100, cps*((l1-pprice)/pprice), GROSS-((l1-pprice)/pprice)))
 	    tgt_count+=1
-	    GROSS += (CPS*ProfitPct)
+	    GROSS += (cps*ProfitPct)
 	    no_sq_off=3
 	if h1 >= pprice:
 	    sl_list.append("%s(%.2f%%)" % (h1,((h1/pprice)-1)*100));
@@ -670,13 +693,13 @@ def BackTestSell(sym, UTC):
     elif no_sq_off==3:
 	log("%s: %s => PossibleTgtHits = %s" % (sym, GetHumanDate(UTC), ','.join(pft_list)))
     else:
-	log("SquareOff Hit: %s: %s => Purchase Price=%.2f, Low=%.2f, High=%.2f, Close=%.2f, CutOffPrice=%.2f], GROSS=%.2f, CPCT=%.2f, G+Earning=%.2f,PossibleTgtHits[%s],PossibleSLHits[%s]" % (GetHumanDate(UTC), sym, pprice, l1, h1, c1, (l1+c1)/2, GROSS, (((l1+c1)/2)-pprice)/pprice, GROSS + (CPS*((((l1+c1)/2)-pprice)/pprice)), ','.join(pft_list), ','.join(sl_list)))
+	log("SquareOff Hit: %s: %s => Purchase Price=%.2f, Low=%.2f, High=%.2f, Close=%.2f, CutOffPrice=%.2f], GROSS=%.2f, CPCT=%.2f, G+Earning=%.2f,PossibleTgtHits[%s],PossibleSLHits[%s]" % (GetHumanDate(UTC), sym, pprice, l1, h1, c1, l1, GROSS, (l1-pprice)/pprice, GROSS + (cps*((l1-pprice)/pprice)), ','.join(pft_list), ','.join(sl_list)))
 	sq_count+=1
-	GROSS += (CPS*((pprice-((l1+c1)/2))/pprice))
+	GROSS += (cps*((pprice-l1)/pprice))
 
 def Get_1Y_Data(sym):
     data = {}
-    sym_file = "%s.1Y.csv" % sym
+    sym_file = "UPDATED-DATA/%s.1Y.csv" % sym
     if today == 0 and os.path.exists(sym_file):
 	with open(sym_file, 'r') as sym_file_handle:
 	    data = json.load(sym_file_handle)
@@ -690,13 +713,14 @@ def Get_1Y_Data(sym):
 	    else:
 		llutc = str(int(lutc)+(int(d[0])*86400))
 		data[llutc] = d[1:]
+	sym_file = "%s.1Y.csv" % sym
 	with open(sym_file, "w") as sym_file_handle:
 	    json.dump(data, sym_file_handle)
     return data
 
 def GetScripCandleData(days, sym):
     data = {}
-    sym_file = "%s.Candles.csv" % sym
+    sym_file = "UPDATED-DATA/%s.Candles.csv" % sym
     if today == 0 and os.path.exists(sym_file):
 	with open(sym_file, 'r') as sym_file_handle:
 	    data = json.load(sym_file_handle)
@@ -717,6 +741,7 @@ def GetScripCandleData(days, sym):
 		lutc = int(utc)
 		#print "Making new entry for %s" % GetHumanDate(lutc)
 		data[str(lutc)] = [d[1:]]
+	sym_file = "%s.Candles.csv" % sym
 	with open(sym_file, "w") as sym_file_handle:
 	    json.dump(data, sym_file_handle)
     #print sorted(data.keys())
@@ -725,7 +750,7 @@ def GetScripCandleData(days, sym):
 NiftyIndex60DCandle = {}
 def GetNiftyIndex60DCandleData():
     global NiftyIndex60DCandle
-    sym_file = "NiftyCandles.csv"
+    sym_file = "UPDATED-DATA/NiftyCandles.csv"
     if today == 0 and os.path.exists(sym_file):
 	with open(sym_file, 'r') as sym_file_handle:
 	    NiftyIndex60DCandle = json.load(sym_file_handle)
@@ -745,13 +770,14 @@ def GetNiftyIndex60DCandleData():
 		lutc = int(utc)
 		#print "Making new entry for %s" % GetHumanDate(lutc)
 		NiftyIndex60DCandle[str(lutc)] = [d[1:]]
+	sym_file = "NiftyCandles.csv"
 	with open(sym_file, "w") as sym_file_handle:
 	    json.dump(NiftyIndex60DCandle, sym_file_handle)
 
 NiftyIndex1YCandle = {}
 def GetNiftyIndex1YCandleData():
     global NiftyIndex1YCandle
-    sym_file = "Nifty1Y.csv"
+    sym_file = "UPDATED-DATA/Nifty1Y.csv"
     if today == 0 and os.path.exists(sym_file):
 	with open(sym_file, 'r') as sym_file_handle:
 	    NiftyIndex1YCandle = json.load(sym_file_handle)
@@ -767,6 +793,7 @@ def GetNiftyIndex1YCandleData():
 	    else:
 		llutc = str(int(lutc)+(int(d[0])*86400))
 		NiftyIndex1YCandle[llutc] = d[1:]
+    sym_file = "Nifty1Y.csv"
     with open(sym_file, "w") as sym_file_handle:
 	json.dump(NiftyIndex1YCandle, sym_file_handle)
 
@@ -823,22 +850,6 @@ def GetNifty200Symbols():
 	syms.append(sym[2])
     return syms
 
-verbose=0
-one_day_scan=0
-y = 2018
-m = 1
-d = 1
-CAPITAL=100000
-CPS=0
-GROSS=CAPITAL
-today=0
-#variance = "Always-Buy"
-variance = "Both-Buy-And-Sell"
-plot_returns='out.plot_earnings'
-plot_hits='out.plot_hits'
-RsymsBuy = []
-RsymsSell = []
-
 def Initialize():
     global sl_count
     global tgt_count
@@ -857,7 +868,6 @@ def Initialize():
     y = 2018
     m = 1
     d = 1
-    CAPITAL=100000
     GROSS=CAPITAL
 
 def MainLoop(s):
@@ -873,7 +883,6 @@ def MainLoop(s):
     global RsymsSell
     global GROSS
     global CPS
-    global SMA_Check
     tdays=0
     t_count=0
     t_tgt_count=0
@@ -906,21 +915,24 @@ def MainLoop(s):
 	dtl = datetime.datetime(y, m, d, 15, 30, 0)
 	utcl = dtl.strftime("%s")
 
+	prev_utcl = GetPrevUTCNifty(str(utcl))
+	if prev_utcl is None:
+	    #print("ERROR: Could not find Previous day for %s" % GetHumanDate(utc))
+	    d+=1
+	    continue
+	if utc not in NiftyIndex60DCandle.keys():
+	    d+=1
+	    #log("No scanning for %s" % GetHumanDate(utc))
+	    continue
+	Ncpt = ((float(NiftyIndex60DCandle[utc][0][0])-float(NiftyIndex1YCandle[prev_utcl][0]))/float(NiftyIndex1YCandle[prev_utcl][0]))*100
+	log("[%s]: Ncpt = %.2f" % (GetHumanDate(utc), Ncpt))
+	if Ncpt <= -2:
+	    d+=1
+	    continue
 	if s == 'Nifty':
-	    prev_utc = GetPrevUTCNifty(str(utcl))
-	    if prev_utc is None:
-		#print("ERROR: Could not find Previous day for %s" % GetHumanDate(utc))
-		d+=1
-		continue
-	    if utc not in NiftyIndex60DCandle.keys():
-	        d+=1
-	        #log("No scanning for %s" % GetHumanDate(utc))
-	        continue
-	    Ncpt = ((float(NiftyIndex60DCandle[utc][0][0])-float(NiftyIndex1YCandle[prev_utc][0]))/float(NiftyIndex1YCandle[prev_utc][0]))*100
 	    strategy = "Buy"
 	    if Ncpt <= -1:
 		strategy = "Sell"
-	    #log("[%s]: Ncpt = %.2f, Strategy=%s" % (GetHumanDate(utc), Ncpt, strategy))
 	else:
 	    strategy = s
 
@@ -932,40 +944,29 @@ def MainLoop(s):
 	    prev_utc = GetPrevUTC(OneYearData[sym], utcl)
 	    if prev_utc is None:
 		continue
-	    #log("Iteration for %s, %s,%s" % (sym, GetHumanDate(prev_utc), GetHumanDate(utc)))
-	    utcs = SixtyDaysData[sym].keys()
+	    if today:
+		utcs = TodayData[sym].keys()
+	    else:
+		utcs = SixtyDaysData[sym].keys()
 
 	    if utc in utcs and prev_utc is not None:
+		log("Iteration for %s, %s,%s" % (sym, GetHumanDate(prev_utc), GetHumanDate(utc)))
 		IntradayStrategy(strategy, sym, utc, prev_utc)
 	    #else:
 		#log("Symbol %s is not shortlisted for %s-%s" % (sym, GetHumanDate(utc), GetHumanDate(prev_utc)))
 
 	if len(RsymsBuy) > 0:
-	    print("Recommended Buy Stocks = %s" % ','.join(RsymsBuy))
+	    print("Recommended Buy Stocks:")
+	    for sym_detail in RsymsBuyDetail:
+		print sym_detail
 
 	if len(RsymsSell) > 0:
-	    print("Recommended Sell Stocks = %s" % ','.join(RsymsSell))
+	    print("Recommended Sell Stocks:")
+	    for sym_detail in RsymsSellDetail:
+		print sym_detail
+	    #print("Recommended Sell Stocks = %s" % ','.join(RsymsSell))
 
 	if BackTesting is True and (len(RsymsBuy) > 0 or len(RsymsSell) > 0):
-	    if (strategy == "Buy" or strategy == "Both") and len(RsymsBuy) > 0:
-		for sym in RsymsBuy:
-		    SMA_list = CalculateSMA(sym, prev_utc)
-		    if SMA_Check:
-			if float(SixtyDaysData[sym][utc][0][3]) < float(SMA_list[2]):
-			    log("Removing %s from shortlisted stocks [%s < %s]" % (sym, SixtyDaysData[sym][utc][0][3], SMA_list[0]))
-			    RsymsBuy.remove(sym)
-			#else:
-			    #log("Retaining %s in shortlisted stocks [%s > %s]" % (sym, SixtyDaysData[sym][utc][0][3], SMA_list[0]))
-	    if (strategy == "Sell" or strategy == "Both") and len(RsymsSell) > 0:
-		for sym in RsymsSell:
-		    SMA_list = CalculateSMA(sym, prev_utc)
-		    if SMA_Check:
-			if float(SixtyDaysData[sym][utc][0][3]) > float(SMA_list[2]):
-			    log("Removing %s from shortlisted stocks [%s > %s]" % (sym, SixtyDaysData[sym][utc][0][3], SMA_list[0]))
-			    RsymsSell.remove(sym)
-		        #else:
-			    #log("Retaining %s in shortlisted stocks [%s < %s]" % (sym, SixtyDaysData[sym][utc][0][3], SMA_list[0]))
-
 	    total_count=len(RsymsBuy)+len(RsymsSell)
 
 	    sl_count=0
@@ -987,13 +988,15 @@ def MainLoop(s):
 
 	    if (strategy == "Buy" or strategy == "Both") and len(RsymsBuy) > 0:
 		for sym in RsymsBuy:
-		    #log("%s[5,10,20,30] = [%s,%s,%s,%s]" % (sym, SMA_list[0], SMA_list[1], SMA_list[2], SMA_list[3]))
-		    BackTestBuy(sym, utc)
+		    SMA_list = CalculateSMA(sym, prev_utc)
+		    log("%s[5,10,20,30] = [%s,%s,%s,%s]" % (sym, SMA_list[0], SMA_list[1], SMA_list[2], SMA_list[3]))
+		    BackTestBuy(sym, utc, CPS)
 
 	    if (strategy == "Sell" or strategy == "Both") and len(RsymsSell) > 0:
 		for sym in RsymsSell:
-		    #log("%s[5,10,20,30] = [%s,%s,%s,%s]" % (sym, SMA_list[0], SMA_list[1], SMA_list[2], SMA_list[3]))
-		    BackTestSell(sym, utc)
+		    SMA_list = CalculateSMA(sym, prev_utc)
+		    log("%s[5,10,20,30] = [%s,%s,%s,%s]" % (sym, SMA_list[0], SMA_list[1], SMA_list[2], SMA_list[3]))
+		    BackTestSell(sym, utc, CPS)
 
 	    if total_count > 0:
 		cdate = GetHumanDate(utc)
@@ -1013,8 +1016,8 @@ def MainLoop(s):
 	    break
     if BackTesting == True:
 	if float((GROSS-CAPITAL)/CAPITAL)*100 > 3 and t_tgt_count >= 0:
-	    print("Nifty%d[%s]: Capital=%d, Gross=%d, Pct=%.2f%% (ProfitPct=%s,SLPct=%s,SMA=%s, VolumeCondition=%s, TotalStocks=%d, Tgt-Hit=%d, SL-Hit=%d, SQ-Hit=%d)" % (len(Nsyms), s, CAPITAL, GROSS, float((GROSS-CAPITAL)/CAPITAL)*100, ProfitPct, SLPct, SMA_Check, VOLS_check_list[VOL_Check], t_count, t_tgt_count, t_sl_count, t_sq_count))
-	    print("CSV,%s,%.2f,%s,%s,%s,%s,%d,%d,%d" % (s, float((GROSS-CAPITAL)/CAPITAL)*100, ProfitPct, SLPct, VOLS_check_list[VOL_Check], SMA_Check, t_tgt_count, t_sl_count, t_sq_count))
+	    print("Nifty%d[%s]: Capital=%d, Gross=%d, Pct=%.2f%% (ProfitPct=%s,SLPct=%s,VolumeCondition=%s, TotalStocks=%d, Tgt-Hit=%d, SL-Hit=%d, SQ-Hit=%d)" % (len(Nsyms), s, CAPITAL, GROSS, float((GROSS-CAPITAL)/CAPITAL)*100, ProfitPct, SLPct, VOLS_check_list[VOL_Check], t_count, t_tgt_count, t_sl_count, t_sq_count))
+	    print("CSV,%s,%.2f,%s,%s,%s,%d,%d,%d,%d" % (s, float((GROSS-CAPITAL)/CAPITAL)*100, ProfitPct, SLPct, VOLS_check_list[VOL_Check], t_tgt_count, t_sl_count, t_sq_count, tdays))
 	    print "Total number of trade days=%d" % tdays
 	plot_returns_handle.close();
 	plot_hits_handle.close();
@@ -1075,8 +1078,6 @@ if __name__=="__main__":
 		variance = "ALL"
 	    elif sys.argv[i] == '--no-back-testing':
 		BackTesting=False
-	    elif sys.argv[i] == '--sma-check':
-		SMA_Check=True
 	    i+=1
 
     if len(Nsyms) == 0:
@@ -1093,34 +1094,22 @@ if __name__=="__main__":
     for sym in Nsyms:
 	# Collect Candle data for the each symbol for last 2 months and 1 year
 	OneYearData[sym] = Get_1Y_Data(sym)
+	TodayData[sym] = GetScripCandleData(1, sym)
 	SixtyDaysData[sym] = GetScripCandleData(60, sym)
 
-    if variance == "Always-Buy":
-	MainLoop("Buy");
-    elif variance == "Both-Buy-And-Sell":
-	MainLoop("Both");
-    else:
-	# Collect Nifty Candle data for the same period and interval as symbols.
-	GetNiftyIndex60DCandleData()
-	GetNiftyIndex1YCandleData()
-	plot_returns1=deepcopy(plot_returns)
-	plot_hits1=deepcopy(plot_hits)
-	if variance == "Go_with_Nifty":
-	    MainLoop('Nifty');
-	elif variance == "ALL":
-	    for sma in (0, 1):
-		if sma == 1:
-		    SMA_Check=True
-		else:
-		    SMA_Check=False
-		for vol in (0, 1, 2, 3, 4, 5, 6, 7, 8):
-		    VOL_Check=vol
-		    for pft_sl in pcts.split(','):
-			pft_sl_list = pft_sl.split(':')
-			ProfitPct = float(pft_sl_list[0])/100
-			SLPct = float(pft_sl_list[1])/100
-			for s in ('Buy', 'Both', 'Nifty'):
-			    plot_returns=plot_returns1.replace('.csv','_%s_%s_SMA_%s_VOL_%s.csv' % (ProfitPct, SLPct, sma, vol))
-			    plot_hits=plot_hits1.replace('.csv','_%s_%s_SMA_%s_VOL_%s.csv' % (ProfitPct, SLPct, sma, vol))
-			    MainLoop(s)
-			    Initialize()
+    print "Data collection done"
+    # Collect Nifty Candle data for the same period and interval as symbols.
+    GetNiftyIndex60DCandleData()
+    GetNiftyIndex1YCandleData()
+    plot_returns1=deepcopy(plot_returns)
+    plot_hits1=deepcopy(plot_hits)
+    VOL_Check=8
+    for pft_sl in pcts.split(','):
+	pft_sl_list = pft_sl.split(':')
+	ProfitPct = float(pft_sl_list[0])/100
+	SLPct = float(pft_sl_list[1])/100
+	for s in (['Both']):
+	    plot_returns=plot_returns1.replace('.csv','_%s_%s_VOL_%s.csv' % (ProfitPct, SLPct, VOL_Check))
+	    plot_hits=plot_hits1.replace('.csv','_%s_%s_VOL_%s.csv' % (ProfitPct, SLPct, VOL_Check))
+	    MainLoop(s)
+	    Initialize()
