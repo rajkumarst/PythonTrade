@@ -24,13 +24,21 @@ RsymsSell = []
 RsymsSellDetail = []
 RsymsBuy = []
 RsymsBuyDetail = []
-
 BackTesting = True
+Interval = 960
+TodayData = {}
+OneYearData = {}
+SixtyDaysData = {}
+VOL_Check=8
+sl_count = 0
+tgt_count = 0
+sq_count = 0
+ProfitPct = 1.2/100
+SLPct = 1.2/100
+pcts = []
 
 NDays = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
-
 Months = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
-
 MIS={'BANKBEES':'10',
 'GOLDBEES':'10',
 'GRANULES':'10',
@@ -470,19 +478,6 @@ MIS={'BANKBEES':'10',
 'WIPRO':'9'
 }
 
-Interval = 960
-TodayData = {}
-OneYearData = {}
-SixtyDaysData = {}
-VOL_Check=8
-
-sl_count = 0
-tgt_count = 0
-sq_count = 0
-
-ProfitPct = 1.2/100
-SLPct = 1.2/100
-
 def log(str):
     if verbose:
 	print str
@@ -559,6 +554,8 @@ def VolCheck(c, sym, pUTC, prev_utc, c_candle_vol):
 def IntradayStrategy(strategy, sym, UTC, pUTC):
     global RsymsBuy
     global RsymsSell
+    global RsymsBuyDetail
+    global RsymsSellDetail
 
     if today:
 	cdata = TodayData[sym][UTC]
@@ -697,13 +694,23 @@ def BackTestSell(sym, UTC, cps):
 	sq_count+=1
 	GROSS += (cps*((pprice-l1)/pprice))
 
+def MarketHours():
+    tdt = datetime.datetime.today();
+    th = int(tdt.strftime("%H"))
+    tm = int(tdt.strftime("%M"))
+    mins = th*60+tm
+    if (mins > 555 and mins < 931):
+	return True
+    return False
+
 def Get_1Y_Data(sym):
     data = {}
     sym_file = "UPDATED-DATA/%s.1Y.csv" % sym
-    if today == 0 and os.path.exists(sym_file):
+    if MarketHours() == False and os.path.exists(sym_file):
 	with open(sym_file, 'r') as sym_file_handle:
 	    data = json.load(sym_file_handle)
     else:
+	1111
 	response = urllib2.urlopen('https://finance.google.com/finance/getprices?x=NSE&q=%s&f=d,c,h,l,o,v&p=1Y' % sym.replace('&','%26'))
 	content = csv.reader(response.read().splitlines()[7:])
 	for d in content:
@@ -721,11 +728,12 @@ def Get_1Y_Data(sym):
 def GetScripCandleData(days, sym):
     data = {}
     sym_file = "UPDATED-DATA/%s.Candles.csv" % sym
-    if today == 0 and os.path.exists(sym_file):
+    if MarketHours() == False and os.path.exists(sym_file):
 	with open(sym_file, 'r') as sym_file_handle:
 	    data = json.load(sym_file_handle)
     else:
 	url = 'https://finance.google.com/finance/getprices?x=NSE&q=%s&f=d,c,h,l,o,v&p=%sd&i=%s' % (sym.replace('&','%26'), days, Interval)
+	1111
 	response = urllib2.urlopen(url)
 	content = csv.reader(response.read().splitlines()[7:])
 	lutc = 0
@@ -751,10 +759,11 @@ NiftyIndex60DCandle = {}
 def GetNiftyIndex60DCandleData():
     global NiftyIndex60DCandle
     sym_file = "UPDATED-DATA/NiftyCandles.csv"
-    if today == 0 and os.path.exists(sym_file):
+    if MarketHours() == False and os.path.exists(sym_file):
 	with open(sym_file, 'r') as sym_file_handle:
 	    NiftyIndex60DCandle = json.load(sym_file_handle)
     else:
+	1111
 	response = urllib2.urlopen('https://finance.google.com/finance/getprices?x=NSE&q=NIFTY&f=d,c,h,l,o,v&p=60d&i=%s' % Interval)
 	content = csv.reader(response.read().splitlines()[7:])
 	lutc = 0
@@ -778,7 +787,7 @@ NiftyIndex1YCandle = {}
 def GetNiftyIndex1YCandleData():
     global NiftyIndex1YCandle
     sym_file = "UPDATED-DATA/Nifty1Y.csv"
-    if today == 0 and os.path.exists(sym_file):
+    if MarketHours() == False and os.path.exists(sym_file):
 	with open(sym_file, 'r') as sym_file_handle:
 	    NiftyIndex1YCandle = json.load(sym_file_handle)
     else:
@@ -857,8 +866,6 @@ def Initialize():
     global y
     global m
     global d
-    global RsymsBuy
-    global RsymsSell
     global CAPITAL
     global GROSS
 
@@ -881,6 +888,8 @@ def MainLoop(s):
     global d
     global RsymsBuy
     global RsymsSell
+    global RsymsBuyDetail
+    global RsymsSellDetail
     global GROSS
     global CPS
     tdays=0
@@ -922,7 +931,6 @@ def MainLoop(s):
 	    continue
 	if utc not in NiftyIndex60DCandle.keys():
 	    d+=1
-	    #log("No scanning for %s" % GetHumanDate(utc))
 	    continue
 	Ncpt = ((float(NiftyIndex60DCandle[utc][0][0])-float(NiftyIndex1YCandle[prev_utcl][0]))/float(NiftyIndex1YCandle[prev_utcl][0]))*100
 	log("[%s]: Ncpt = %.2f" % (GetHumanDate(utc), Ncpt))
@@ -938,6 +946,8 @@ def MainLoop(s):
 
 	RsymsBuy = []
 	RsymsSell = []
+	RsymsBuyDetail = []
+	RsymsSellDetail = []
 
 	# Shortlist complete list of stocks in one iteration
 	for sym in Nsyms:
@@ -1022,8 +1032,6 @@ def MainLoop(s):
 	plot_returns_handle.close();
 	plot_hits_handle.close();
 
-pcts = []
-
 if __name__=="__main__":
     Nsyms = []
     # Get Nifty symbols
@@ -1097,19 +1105,22 @@ if __name__=="__main__":
 	TodayData[sym] = GetScripCandleData(1, sym)
 	SixtyDaysData[sym] = GetScripCandleData(60, sym)
 
-    print "Data collection done"
     # Collect Nifty Candle data for the same period and interval as symbols.
     GetNiftyIndex60DCandleData()
     GetNiftyIndex1YCandleData()
+
     plot_returns1=deepcopy(plot_returns)
     plot_hits1=deepcopy(plot_hits)
     VOL_Check=8
-    for pft_sl in pcts.split(','):
-	pft_sl_list = pft_sl.split(':')
-	ProfitPct = float(pft_sl_list[0])/100
-	SLPct = float(pft_sl_list[1])/100
-	for s in (['Both']):
-	    plot_returns=plot_returns1.replace('.csv','_%s_%s_VOL_%s.csv' % (ProfitPct, SLPct, VOL_Check))
-	    plot_hits=plot_hits1.replace('.csv','_%s_%s_VOL_%s.csv' % (ProfitPct, SLPct, VOL_Check))
-	    MainLoop(s)
-	    Initialize()
+    if len(pcts) > 0:
+	for pft_sl in pcts.split(','):
+	    pft_sl_list = pft_sl.split(':')
+	    ProfitPct = float(pft_sl_list[0])/100
+	    SLPct = float(pft_sl_list[1])/100
+	    for s in (['Both']):
+		plot_returns=plot_returns1.replace('.csv','_%s_%s_VOL_%s.csv' % (ProfitPct, SLPct, VOL_Check))
+		plot_hits=plot_hits1.replace('.csv','_%s_%s_VOL_%s.csv' % (ProfitPct, SLPct, VOL_Check))
+		MainLoop(s)
+		Initialize()
+    else:
+	MainLoop('Both')
