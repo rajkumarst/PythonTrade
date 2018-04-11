@@ -710,7 +710,6 @@ def Get_1Y_Data(sym):
 	with open(sym_file, 'r') as sym_file_handle:
 	    data = json.load(sym_file_handle)
     else:
-	1111
 	response = urllib2.urlopen('https://finance.google.com/finance/getprices?x=NSE&q=%s&f=d,c,h,l,o,v&p=1Y' % sym.replace('&','%26'))
 	content = csv.reader(response.read().splitlines()[7:])
 	for d in content:
@@ -733,7 +732,6 @@ def GetScripCandleData(days, sym):
 	    data = json.load(sym_file_handle)
     else:
 	url = 'https://finance.google.com/finance/getprices?x=NSE&q=%s&f=d,c,h,l,o,v&p=%sd&i=%s' % (sym.replace('&','%26'), days, Interval)
-	1111
 	response = urllib2.urlopen(url)
 	content = csv.reader(response.read().splitlines()[7:])
 	lutc = 0
@@ -763,7 +761,6 @@ def GetNiftyIndex60DCandleData():
 	with open(sym_file, 'r') as sym_file_handle:
 	    NiftyIndex60DCandle = json.load(sym_file_handle)
     else:
-	1111
 	response = urllib2.urlopen('https://finance.google.com/finance/getprices?x=NSE&q=NIFTY&f=d,c,h,l,o,v&p=60d&i=%s' % Interval)
 	content = csv.reader(response.read().splitlines()[7:])
 	lutc = 0
