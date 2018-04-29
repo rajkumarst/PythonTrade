@@ -1,0 +1,21 @@
+PROG=Open-Equal-Low.py
+VALUES="0.3 0.5 0.75 1 1.5 2"
+vals=`echo $VALUES |
+awk '{
+    for(i=1; i<=NF; i++) {
+        val1=$i
+        val2=$i*2
+        val3=$i*3
+        val4=$i*4
+        values = sprintf("%s,%s:%s,%s:%s,%s:%s,%s:%s", values, $i, $i, val2, $i, val3, $i, val4, $i);
+    }
+    sub("^,", "", values)
+    sub(",$", "", values)
+    print values
+}'`
+
+[ "$vals" ] && {
+	#python2.7 $PROG --scrips KOTAKBANK --verbose --all $1 --profit-sl-combo $vals > result.$$
+	python2.7 $PROG --verbose --all --leverage --profit-sl-combo $vals > result.$$
+	sed -n '/Capital/s/.* Pct=\([^%]*\)%.*/\1/p' result.$$ | sort -n
+    }
