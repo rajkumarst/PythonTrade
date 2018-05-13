@@ -24,11 +24,11 @@ utcl = 0
 DailyData = {}
 TodayCandleData = {}
 
-#Nsyms=['BHARTIARTL']
+Nsyms=['IDEA']
 #Nsyms=['EICHERMOT', 'UNIONBANK', 'DRREDDY', 'MCLEODRUSS']
 
 # Symbols we scan
-Nsyms=['YESBANK', 'TATASTEEL', 'STAR', 'SBIN', 'RELIANCE', 'POWERGRID', 'PETRONET', 'ONGC', 'OIL', 'MARUTI', 'M&M', 'LT', 'KTKBANK', 'KOTAKBANK', 'JSWSTEEL', 'ITC', 'IOC', 'INDUSINDBK', 'IGL', 'ICICIBANK', 'HINDUNILVR', 'HEROMOTOCO', 'HDFCBANK', 'HDFC', 'GAIL', 'FEDERALBNK', 'DCBBANK', 'DABUR', 'COLPAL', 'COALINDIA', 'CIPLA', 'CEATLTD', 'CASTROLIND', 'CANBK', 'BPCL', 'BOSCHLTD', 'BHARTIARTL', 'BHARATFORG', 'BATAINDIA', 'BANKBARODA', 'BAJAJ-AUTO', 'AXISBANK', 'ASIANPAINT', 'ASHOKLEY', 'ARVIND', 'APOLLOTYRE', 'APOLLOHOSP', 'AMBUJACEM', 'AMARAJABAT', 'ACC', 'UNIONBANK', 'KSCL', 'ICIL', 'ZEEL', 'VEDL', 'UPL', 'ULTRACEMCO', 'UBL', 'TVSMOTOR', 'TITAN', 'TATAMTRDVR', 'TATAMOTORS', 'TATACHEM', 'SRTRANSFIN', 'SRF', 'RECLTD', 'PTC', 'PIDILITIND', 'NTPC', 'NMDC', 'NCC', 'MRF', 'MOTHERSUMI', 'MCLEODRUSS', 'MCDOWELL-N', 'MARICO', 'M&MFIN', 'LUPIN', 'LICHSGFIN', 'L&TFH', 'JUBLFOOD', 'JISLJALEQS', 'INDIACEM', 'HINDZINC', 'HINDPETRO', 'HINDALCO', 'HEXAWARE', 'GRASIM', 'GLENMARK', 'EXIDEIND', 'ENGINERSIN', 'EICHERMOT', 'BRITANNIA', 'BHEL', 'GRANULES', 'GOLDBEES', 'BANKBEES', 'WIPRO', 'VOLTAS', 'TECHM', 'TCS', 'TATAPOWER', 'TATAGLOBAL', 'TATAELXSI', 'TATACOMM', 'SIEMENS', 'RELINFRA', 'RELCAPITAL', 'PFC', 'PAGEIND', 'NIITTECH', 'MINDTREE', 'IRB', 'INFY', 'INFRATEL', 'IBULHSGFIN', 'HCLTECH', 'HAVELLS', 'DISHTV', 'CONCOR', 'CESC', 'CADILAHC', 'BIOCON', 'BEML', 'BEL', 'TORNTPOWER', 'OFSS', 'KPIT', 'JINDALSTEL', 'CGPOWER', 'CENTURYTEX', 'BHARATFIN', 'AJANTPHARM', 'WOCKPHARMA', 'TORNTPHARM', 'SUNPHARMA', 'ORIENTBANK', 'IDEA', 'GODREJIND', 'DRREDDY', 'DLF', 'DIVISLAB', 'DHFL', 'BANKINDIA', 'BAJFINANCE', 'AUROPHARMA']
+#Nsyms=['YESBANK', 'TATASTEEL', 'STAR', 'SBIN', 'RELIANCE', 'POWERGRID', 'PETRONET', 'ONGC', 'OIL', 'MARUTI', 'M&M', 'LT', 'KTKBANK', 'KOTAKBANK', 'JSWSTEEL', 'ITC', 'IOC', 'INDUSINDBK', 'IGL', 'ICICIBANK', 'HINDUNILVR', 'HEROMOTOCO', 'HDFCBANK', 'HDFC', 'GAIL', 'FEDERALBNK', 'DCBBANK', 'DABUR', 'COLPAL', 'COALINDIA', 'CIPLA', 'CEATLTD', 'CASTROLIND', 'CANBK', 'BPCL', 'BOSCHLTD', 'BHARTIARTL', 'BHARATFORG', 'BATAINDIA', 'BANKBARODA', 'BAJAJ-AUTO', 'AXISBANK', 'ASIANPAINT', 'ASHOKLEY', 'ARVIND', 'APOLLOTYRE', 'APOLLOHOSP', 'AMBUJACEM', 'AMARAJABAT', 'ACC', 'UNIONBANK', 'KSCL', 'ICIL', 'ZEEL', 'VEDL', 'UPL', 'ULTRACEMCO', 'UBL', 'TVSMOTOR', 'TITAN', 'TATAMTRDVR', 'TATAMOTORS', 'TATACHEM', 'SRTRANSFIN', 'SRF', 'RECLTD', 'PTC', 'PIDILITIND', 'NTPC', 'NMDC', 'NCC', 'MRF', 'MOTHERSUMI', 'MCLEODRUSS', 'MCDOWELL-N', 'MARICO', 'M&MFIN', 'LUPIN', 'LICHSGFIN', 'L&TFH', 'JUBLFOOD', 'JISLJALEQS', 'INDIACEM', 'HINDZINC', 'HINDPETRO', 'HINDALCO', 'HEXAWARE', 'GRASIM', 'GLENMARK', 'EXIDEIND', 'ENGINERSIN', 'EICHERMOT', 'BRITANNIA', 'BHEL', 'GRANULES', 'GOLDBEES', 'BANKBEES', 'WIPRO', 'VOLTAS', 'TECHM', 'TCS', 'TATAPOWER', 'TATAGLOBAL', 'TATAELXSI', 'TATACOMM', 'SIEMENS', 'RELINFRA', 'RELCAPITAL', 'PFC', 'PAGEIND', 'NIITTECH', 'MINDTREE', 'IRB', 'INFY', 'INFRATEL', 'IBULHSGFIN', 'HCLTECH', 'HAVELLS', 'DISHTV', 'CONCOR', 'CESC', 'CADILAHC', 'BIOCON', 'BEML', 'BEL', 'TORNTPOWER', 'OFSS', 'KPIT', 'JINDALSTEL', 'CGPOWER', 'CENTURYTEX', 'BHARATFIN', 'AJANTPHARM', 'WOCKPHARMA', 'TORNTPHARM', 'SUNPHARMA', 'ORIENTBANK', 'IDEA', 'GODREJIND', 'DRREDDY', 'DLF', 'DIVISLAB', 'DHFL', 'BANKINDIA', 'BAJFINANCE', 'AUROPHARMA']
 
 # Zerodha Margin information
 MIS={'BANKBEES':'10',
@@ -547,7 +547,7 @@ def GetPastData(sym, PastData):
 
 # This is the core function
 # Shortlist each symbol based on the startegy
-def IntradayStrategy(sym, BuySyms, SellSyms):
+def IntradayStrategy(sym, PastData, BuySyms, SellSyms):
     # Collect today's Candle data for each symbol
     TodayCandleData[sym] = GetScripCandleData(1, sym)
 
@@ -572,9 +572,12 @@ def IntradayStrategy(sym, BuySyms, SellSyms):
     elif o1 == h1 and pclose > o1 and (c_candle_vol/pvol)*100 > VolInc and cpt > PriceInc and (c1+(c1*(0.1/100))) > c2:
 	    SellSyms[sym] = c2
 
-if __name__ == '__main__':
-    dt = datetime.datetime.today();
-    #dt = datetime.datetime.today() - datetime.timedelta(1);
+def FindOHOLStocks():
+    global utc
+    global utcl
+
+    #dt = datetime.datetime.today();
+    dt = datetime.datetime.today() - datetime.timedelta(2);
     y = int(dt.strftime("%Y"))
     m = int(dt.strftime("%m"))
     d = int(dt.strftime("%d"))
@@ -600,7 +603,7 @@ if __name__ == '__main__':
 	exit(0)
     Ncpt = ((float(cnifty)-float(pnifty))/float(pnifty))*100
     if Ncpt <= -2:
-	print "Better dont trade today as Nifty is down by %.2f%% :)" % Ncpt
+	print "CAUTION: Better dont trade today as Nifty is down by %.2f%% :)" % Ncpt
 	exit(0)
 
     jobs = []
@@ -619,12 +622,14 @@ if __name__ == '__main__':
     SellSyms = manager.dict()
 
     for sym in Nsyms:
-        p = multiprocessing.Process(target=IntradayStrategy, args=(sym, BuySyms, SellSyms))
+        p = multiprocessing.Process(target=IntradayStrategy, args=(sym, PastData, BuySyms, SellSyms))
         jobs.append(p)
         p.start()
 
     for proc in jobs:
         proc.join()
+
+    return (BuySyms, SellSyms)
 
     if (len(BuySyms.keys())+len(SellSyms.keys())) > 0:
 	cps = int(cap/(len(BuySyms.keys())+len(SellSyms.keys())))
@@ -638,3 +643,5 @@ if __name__ == '__main__':
 	    #print "Sell %s @ %.2f (Leverage=%s applied)" % (sym, SellSyms[sym], MIS[sym])
     else:
 	print 'No stocks shortlisted'
+
+
